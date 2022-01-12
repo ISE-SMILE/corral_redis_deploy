@@ -63,6 +63,7 @@ func main() {
 
 	//grab a random port
 	lis, err := net.Listen("tcp", "localhost:0")
+	defer lis.Close()
 	if err != nil {
 		panic(err)
 	}
@@ -78,4 +79,5 @@ func main() {
 	if err != nil {
 		fmt.Println("Corral Redis Deployment Plugin Stopped ")
 	}
+
 }
