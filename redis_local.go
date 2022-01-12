@@ -19,8 +19,7 @@ type LocalRedisDeploymentStrategy struct {
 	port        string
 }
 
-func (l *LocalRedisDeploymentStrategy) Deploy(config *services.RedisDeploymentConfig) (*services.RedisClientConfig, error) {
-	ctx := context.Background()
+func (l *LocalRedisDeploymentStrategy) Deploy(ctx context.Context, config *services.RedisDeploymentConfig) (*services.RedisClientConfig, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, err
@@ -111,12 +110,11 @@ func (l *LocalRedisDeploymentStrategy) Deploy(config *services.RedisDeploymentCo
 	}, nil
 }
 
-func (l *LocalRedisDeploymentStrategy) Undeploy(config *services.RedisDeploymentConfig) error {
+func (l *LocalRedisDeploymentStrategy) Undeploy(ctx context.Context, config *services.RedisDeploymentConfig) error {
 	if l.containerID == "" {
 		return fmt.Errorf("redis was not deployed")
 	}
 
-	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		panic(err)

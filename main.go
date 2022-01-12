@@ -10,8 +10,8 @@ import (
 )
 
 type DeploymentStrategy interface {
-	Deploy(config *services.RedisDeploymentConfig) (*services.RedisClientConfig, error)
-	Undeploy(config *services.RedisDeploymentConfig) error
+	Deploy(ctx context.Context, config *services.RedisDeploymentConfig) (*services.RedisClientConfig, error)
+	Undeploy(ctx context.Context, config *services.RedisDeploymentConfig) error
 }
 
 type PluginServer struct {
@@ -19,31 +19,22 @@ type PluginServer struct {
 }
 
 func (p *PluginServer) Deploy(ctx context.Context, config *services.RedisDeploymentConfig) (*services.RedisClientConfig, error) {
-	select {
-	case <-ctx.Done():
-		return nil, fmt.Errorf("timeout")
-	default:
-		clientConfig, err := p.strategy.Deploy(config)
-		if err != nil {
-			return nil, err
-		}
-
-		return clientConfig, nil
+	clientConfig, err := p.strategy.Deploy(ctx, config)
+	if err != nil {
+		return nil, err
 	}
+
+	return clientConfig, nil
 }
 
 func (p *PluginServer) Undeploy(ctx context.Context, config *services.RedisDeploymentConfig) (*services.Error, error) {
-	select {
-	case <-ctx.Done():
-		return nil, fmt.Errorf("timeout")
-	default:
-		err := p.strategy.Undeploy(config)
-		if err != nil {
-			msg := err.Error()
-			return &services.Error{Message: &msg}, nil
-		}
-		return nil, nil
+	err := p.strategy.Undeploy(ctx, config)
+	if err != nil {
+		msg := err.Error()
+		return &services.Error{Message: &msg}, nil
 	}
+
+	return nil, nil
 }
 
 func main() {
@@ -57,6 +48,10 @@ func main() {
 	switch mode {
 	case "local":
 		p.strategy = &LocalRedisDeploymentStrategy{}
+	case "k8s":
+		fallthrough
+	case "kubernetes":
+		p.strategy = &KubernetesRedisDeploymentStrategy{}
 	default:
 		p.strategy = &LocalRedisDeploymentStrategy{}
 	}

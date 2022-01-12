@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"helm.sh/helm/v3/pkg/action"
@@ -35,13 +36,10 @@ const RedisKubernetesChart = "groundhog2k/redis"
 const RedisKubernetesDeploymentName = "corral-redis"
 
 type KubernetesRedisDeploymentStrategy struct {
-	Namespace    string
-	StorageClass string
-	NodePort     *int
-
-	deploymentName string
-
-	//helmClient helmClient.Client
+	Namespace     string
+	StorageClass  string
+	NodePort      *int
+	MemoryLimitMB *int
 }
 
 type kubernetesRedisConfig struct {
@@ -65,7 +63,12 @@ type kubernetesRedisConfig struct {
 func (k *KubernetesRedisDeploymentStrategy) config() (map[string]interface{}, error) {
 	conf := &kubernetesRedisConfig{}
 
-	conf.Resources.Limits.Memory = "512Mi"
+	if k.MemoryLimitMB != nil {
+		conf.Resources.Limits.Memory = fmt.Sprintf("%dMi", &k.MemoryLimitMB)
+	} else {
+		conf.Resources.Limits.Memory = "512Mi"
+	}
+
 	conf.Storage.Class = k.StorageClass
 
 	if k.NodePort != nil {
@@ -89,6 +92,30 @@ func (k *KubernetesRedisDeploymentStrategy) config() (map[string]interface{}, er
 	return vals, nil
 }
 func (k *KubernetesRedisDeploymentStrategy) Deploy(ctx context.Context, config *services.RedisDeploymentConfig) (*services.RedisClientConfig, error) {
+	if config != nil {
+		if ns, ok := config.Env["kubernetesNamespace"]; ok {
+			k.Namespace = ns
+		}
+
+		if sc, ok := config.Env["kubernetesStorageClass"]; ok {
+			k.StorageClass = sc
+		}
+
+		if prt, ok := config.Env["redisPort"]; ok {
+			port, err := strconv.Atoi(prt)
+			if err == nil {
+				k.NodePort = &port
+			}
+		}
+
+		if kmem, ok := config.Env["kubernetesMemory"]; ok {
+			mem, err := strconv.Atoi(kmem)
+			if err == nil {
+				k.MemoryLimitMB = &mem
+			}
+		}
+	}
+
 	settings, actionConfig, err := k.helmClient()
 	if err != nil {
 		return nil, err

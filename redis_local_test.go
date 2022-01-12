@@ -9,7 +9,7 @@ import (
 func TestLocalRedisDeploymentStrategy(t *testing.T) {
 	lrds := &LocalRedisDeploymentStrategy{}
 
-	conf, err := lrds.Deploy(nil)
+	conf, err := lrds.Deploy(nil, nil)
 
 	if err != nil {
 		t.Fatalf("failed to deploy, %+v", err)
@@ -17,7 +17,7 @@ func TestLocalRedisDeploymentStrategy(t *testing.T) {
 
 	t.Logf("%+v", conf)
 
-	err = lrds.Undeploy(nil)
+	err = lrds.Undeploy(nil, nil)
 	if err != nil {
 		t.Fatalf("failed to undeploy, %+v", err)
 	}
@@ -27,7 +27,7 @@ func TestLocalRedisDeploymentStrategy(t *testing.T) {
 func TestLocalRedisDeploymentStrategy_WithConnection(t *testing.T) {
 	lrds := &LocalRedisDeploymentStrategy{}
 
-	conf, err := lrds.Deploy(nil)
+	conf, err := lrds.Deploy(nil, nil)
 
 	if err != nil {
 		t.Fatalf("failed to deploy, %+v", err)
@@ -47,7 +47,7 @@ func TestLocalRedisDeploymentStrategy_WithConnection(t *testing.T) {
 
 	t.Logf("%+v - %+v", conf, pong)
 
-	err = lrds.Undeploy(nil)
+	err = lrds.Undeploy(nil, nil)
 	if err != nil {
 		t.Fatalf("failed to undeploy, %+v", err)
 	}
