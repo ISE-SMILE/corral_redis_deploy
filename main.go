@@ -34,7 +34,7 @@ func (p *PluginServer) Undeploy(ctx context.Context, config *services.RedisDeplo
 		return &services.Error{Message: &msg}, nil
 	}
 
-	return nil, nil
+	return &services.Error{}, nil
 }
 
 func main() {
